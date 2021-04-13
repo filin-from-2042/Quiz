@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean name="questions_file" class="java.lang.String">
+        <constructor-arg value="/questions.csv" />
+    </bean>
+    <bean name="questionDAO" class="com.quiz.dao.QuestionDAOImpl" >
+        <constructor-arg name="fileName" ref="questions_file"/>
+    </bean>
+    <bean name="questionService" class="com.quiz.service.QuestionServiceImpl" >
+        <constructor-arg ref="questionDAO" />
+    </bean>
+    <bean name="Quiz" class="com.quiz.ui.Quiz">
+        <constructor-arg ref="questionService" />
+    </bean>
+</beans>
