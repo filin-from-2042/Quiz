@@ -6,6 +6,7 @@ import java.util.List;
 public class Question {
     private String question;
     private List<Answer> answers = new ArrayList<>();
+    private List<Answer> rightAnswers = new ArrayList<>();
 
     public void setQuestion(String question)
     {
@@ -30,4 +31,8 @@ public class Question {
     {
         this.answers.add(answer);
     }
+
+    public List<Answer> getRightAnswers(){return this.rightAnswers;}
+
+    public void addRightAnswer(Answer answer){ this.rightAnswers.add(answer);}
 }

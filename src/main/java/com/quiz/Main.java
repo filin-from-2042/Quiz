@@ -1,23 +1,40 @@
 package com.quiz;
 
-import com.opencsv.exceptions.CsvException;
 import com.quiz.dao.QuestionDAO;
 import com.quiz.dao.QuestionDAOImpl;
 import com.quiz.service.QuestionService;
+import com.quiz.service.QuestionServiceImpl;
 import com.quiz.ui.Quiz;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.core.io.Resource;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.*;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
+@Configuration
+@PropertySource("classpath:application.properties")
 public class Main {
-    public static final Log logger = LogFactory.getLog(Main.class);
+
+    @Value("${url}")
+    private String url;
+
+    @Bean
+    public QuestionDAO questionDAO()
+    {
+        return new QuestionDAOImpl(url);
+    }
+
+    @Bean
+    public QuestionService questionService(QuestionDAO dao)
+    {
+        return new QuestionServiceImpl(dao);
+    }
+
+    @Bean
+    public Quiz quiz(QuestionService questionService)
+    {
+        return new Quiz(questionService);
+    }
 
     public static void main(String[] args) {
-        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("/spring-context.xml");
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(Main.class);
         Quiz quiz = context.getBean(Quiz.class);
         quiz.start();
     }

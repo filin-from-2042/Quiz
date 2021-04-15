@@ -1,10 +1,10 @@
 package com.quiz.ui;
 
 import com.opencsv.exceptions.CsvException;
-import com.quiz.dao.QuestionDAO;
 import com.quiz.entity.Answer;
 import com.quiz.entity.Question;
 import com.quiz.service.QuestionService;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,6 +12,10 @@ import java.util.*;
 
 public class Quiz {
     QuestionService service;
+    Scanner scanner = new Scanner(System.in);
+
+    @Value("${passing_score}")
+    private int passingScore;
 
     public Quiz(QuestionService service)
     {
@@ -20,22 +24,25 @@ public class Quiz {
 
     public void start()
     {
+        Map<String,List<Answer>> resultUserAnswers = new LinkedHashMap<>();
+        int score = 0;
         try {
-            Map<String,String> userAnswers = new TreeMap<>();
-            Scanner scanner = new Scanner(System.in);
             List<Question> questions = service.getAll();
             for(Question question : questions)
             {
-                System.out.println(question.getQuestion());
-                List<Answer> answers = question.getAnswers();
-                for (int i = 1; i<=answers.size(); i++)
-                {
-                    System.out.printf("%d. %s\n",i,answers.get(i-1).getAnswer());
-                }
-                String userAnswer = scanner.nextLine();
-                userAnswers.put(question.getQuestion(), userAnswer);
+                showQuestion(question);
+                List<Answer> currentUserAnswers = getAnswersFromUser(question);
+
+                List<Answer> rightAnswers = question.getRightAnswers();
+                if(rightAnswers.containsAll(currentUserAnswers) && currentUserAnswers.containsAll(rightAnswers)) score++;
+
+                resultUserAnswers.put(question.getQuestion(), currentUserAnswers);
             }
-            System.out.println(userAnswers);
+            System.out.printf("You got %d scores\n", score);
+            System.out.println(resultUserAnswers);
+
+            if(score >= passingScore) System.out.println("You passed!");
+            else System.out.println("You failed!");
         }
         catch (FileNotFoundException exception)
         {
@@ -49,5 +56,37 @@ public class Quiz {
         {
             System.out.println("Reading csv file exception");
         }
+    }
+
+    private void showQuestion(Question question)
+    {
+        System.out.println(question.getQuestion());
+        List<Answer> answers = question.getAnswers();
+        for (int i = 1; i<=answers.size(); i++)
+        {
+            System.out.printf("%d. %s\n",i,answers.get(i-1).getAnswer());
+        }
+    }
+
+    private List<Answer> getAnswersFromUser(Question question)
+    {
+        List<Answer> allAnswers = question.getAnswers();
+        List<Answer> answers = new ArrayList<>();
+        while(answers.size()==0)
+        {
+            System.out.println("Enter your answer(s) comma separated");
+            String userInput = scanner.nextLine();
+            try {
+                 String[] inputtedNumbers = userInput.split(",");
+                for(String number : inputtedNumbers)
+                {
+                    int answerIndex = Integer.parseInt(number)-1;
+                    answers.add(allAnswers.get(answerIndex));
+                }
+            } catch (NumberFormatException | IndexOutOfBoundsException exception) {
+                System.out.println("You entered incorrect answer number!");
+            }
+        }
+        return answers;
     }
 }
